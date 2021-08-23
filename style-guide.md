@@ -21,9 +21,9 @@
 
 ### Component Folder Organization
 
-- Only one JSX component export per file.
+- **Only one JSX component export per file.**
 - Multiple component files can be stored in the same folder, provided they are only used in the master `index.tsx` file. If used in other components, the file should be moved up the file tree to the base of where they're shared amongst the children components.
-- If a component is getting big and filled with a lot of business logic functions, they should be moved to a `utils` file. Name the file after the parent folder in camelCase, i.e. `tacoMenuUtils.ts`
+- If a component is getting big and filled with a lot of business logic functions, they should be moved to a `utils` file. Name the file after the parent folder in camelCase, i.e. `tacoMenuItemUtils.ts`
 
 ### Component File Organization
 
@@ -95,17 +95,17 @@
 - Always use self closing tags in JSX if there are no children inside the element.
 
   ```tsx
-  {
-    // Bad
-    <i className="icon icon-distance"></i>;
-  }
-  {
-    // Good
-    <i className="icon icon-distance" />;
-  }
+  // Bad
+  <i className="icon icon-distance"></i>
+  ```
+
+  ```tsx
+  // Good
+  <i className="icon icon-distance" />
   ```
 
 - As much as possible, organize components in the following manner:
+
   1. Any props manipulation variables (object destructuring of props, sorting an array of objects, etc.)
   1. API call variables (`react-query` hooks)
   1. State variables
@@ -142,14 +142,21 @@
 - As much as possible, use a unique data point as a key for mapped JSX elements, instead of `index`, which can be an antipattern.
 
   ```tsx
-  <>
-    <select>
-      {filterMenu.map((filter, i) => (
-        // don't use i if filter.name is unique
-        <option key={filter.name}>{filter.name}</option>
-      ))}
-    </select>
-  </>
+  // Bad
+  <select>
+    {tacoToppings.map((topping, i) => (
+      <option key={i}>{topping.name}</option>
+    ))}
+  </select>
+  ```
+
+  ```tsx
+  // Good, if filter.name is unique
+  <select>
+    {tacoToppings.map((topping) => (
+      <option key={topping.name}>{topping.name}</option>
+    ))}
+  </select>
   ```
 
 - If functions get too large and hard to read inside JSX returns (i.e. more than two or three lines), move them into the body of the function and use a callback in the JSX.
@@ -173,14 +180,13 @@
 
   ```tsx
   // Parent component
-  {
-    // Bad
-    <Taco name={name} hasSalsa={true} hasSourCream={true} />;
-  }
-  {
-    // Good
-    <Taco name={name} hasSalsa hasSourCream />;
-  }
+  // Bad
+  <Taco name={name} hasSalsa={true} hasSourCream={true} />
+  ```
+
+  ```tsx
+  // Good
+  <Taco name={name} hasSalsa hasSourCream />
   ```
 
   ```typescript
@@ -197,41 +203,59 @@
 - Use ternary expressions for conditional rendering as much as possible.
 
   ```tsx
-  {
-    // Bad
-    if (hasTacos) {
-      <TacoFeedback feedbackState={feedbackState} />;
-    } else {
-      <TacoWaitScreen waitTime={waitTime} />;
-    }
+  // Bad
+  if (hasTacos) {
+    <TacoFeedback feedbackState={feedbackState} />;
+  } else {
+    <TacoWaitScreen waitTime={waitTime} />;
   }
-  {
-    // Good
-    hasTacos ? (
-      <TacoFeedback feedbackState={feedbackState} />
-    ) : (
-      <TacoWaitScreen waitTime={waitTime} />
-    );
-  }
+  ```
+
+  ```tsx
+  // Good
+  hasTacos ? (
+    <TacoFeedback feedbackState={feedbackState} />
+  ) : (
+    <TacoWaitScreen waitTime={waitTime} />
+  );
+  ```
+
+- Use a `Fragment` instead of a `div` if the html attributes of a `div` aren't needed:
+
+  ```tsx
+  // Bad
+  <div>
+    <TacoHeader />
+    <TacoMenuOptions />
+  </div>
+  ```
+
+  ```tsx
+  // Good
+  <>
+    <TacoHeader />
+    <TacoMenuOptions />
+  </>
   ```
 
 - Try to avoid IIFE switch statements inside JSX. If you're in a place where you're thinking of one, it probably means another component with a switch statement is a good idea. Or, you could use an object literal.
 
   ```tsx
   // Bad
-  {
-    (() => {
-      switch (tacoType) {
-        case 'chicken':
-          return <ChickenTaco />;
-        case 'carnitas':
-          return <CarnitasTaco />;
-        case 'blackBean':
-          return <BlackBeanTaco />;
-      }
-    })();
-  }
 
+  (() => {
+    switch (tacoType) {
+      case 'chicken':
+        return <ChickenTaco />;
+      case 'carnitas':
+        return <CarnitasTaco />;
+      case 'blackBean':
+        return <BlackBeanTaco />;
+    }
+  })();
+  ```
+
+  ```tsx
   // Good
   // Parent component
   return (
@@ -251,7 +275,9 @@
         return <BlackBeanTaco />;
     }
   }
+  ```
 
+  ```tsx
   // Also good
   const tacoTypeComponents = {
     chicken: <ChickenTaco />,
