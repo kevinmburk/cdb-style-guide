@@ -5,12 +5,12 @@
 - Folders are named in PascalCase.
 - Each folder contains an `index.tsx` file with an export function of the same name as the folder, which will be auto imported in other files when pointing to the parent folder.
 
-  ```tsx
+  ```typescript
   // components/TacoMenuItem/index.tsx
   export default function TacoMenuItem({ menuItem, id }: Props) {
   ```
 
-  ```tsx
+  ```typescript
   // Another component
   import TacoMenuItem from '../TacoMenuItem';
   ```
@@ -85,7 +85,7 @@
 
   ```typescript
   const [tacoQuantity, setTacoQuantity] = useState<number>(0);
-  // Stating this type inline is fine if this state variable is only in this component
+  // Stating this type inline is OK, provided the state variable is only used in this component
   const [toppings, setToppings] = useState<'salsa' | 'sourCream'>(null);
   // TacoTypeResource is imported from a separate resource file
   const [tacoType, setTacoType] = useState<TacoTypeResource>(null);
@@ -101,7 +101,7 @@
   1. Functions used in the component
   1. JSX return
 
-  ```tsx
+  ```typescript tsx
   interface Props {
     menu: TacoMenuItem[];
     store: StoreResource;
@@ -143,19 +143,19 @@
 - **Prettier will take care of most code formatting for us. Just make sure to run an** `npm run build` **of the app before opening a PR.**
 - Always use self closing tags in JSX if there are no children inside the element.
 
-  ```tsx
+  ```typescript tsx
   // Bad
   <i className="icon icon-distance"></i>
   ```
 
-  ```tsx
+  ```typescript tsx
   // Good
   <i className="icon icon-distance" />
   ```
 
 - As much as possible, use a unique data point as a key for mapped JSX elements, instead of the `index`, which can be an [antipattern](https://robinpokorny.medium.com/index-as-a-key-is-an-anti-pattern-e0349aece318).
 
-  ```tsx
+  ```typescript tsx
   // Bad
   <select>
     {tacoToppings.map((topping, i) => (
@@ -164,7 +164,7 @@
   </select>
   ```
 
-  ```tsx
+  ```typescript tsx
   // Good, if topping.name is unique
   <select>
     {tacoToppings.map((topping) => (
@@ -175,7 +175,7 @@
 
 - If functions get too large and hard to read inside JSX returns (i.e. more than two or three lines), move them into the body of the function and use a callback in the JSX.
 
-  ```tsx
+  ```typescript tsx
   // Bad
   return (
     <div>
@@ -209,30 +209,30 @@
 
 - If the prop being sent to a component is an optional boolean, just write the name of the prop in the component to give it an implicit true.
 
-  ```tsx
+  ```typescript tsx
   // Bad
   <Taco name={name} hasSalsa={true} hasSourCream={true} />
   ```
 
-  ```tsx
+  ```typescript tsx
   // Good
   <Taco name={name} hasSalsa hasSourCream />
   ```
 
   ```typescript
-    // Taco.tsx
-    interface Props {
-      name: string;
-      hasSalsa?: boolean;
-      hasSourCream?: boolean;
-    }
+  // Taco.tsx
+  interface Props {
+    name: string;
+    hasSalsa?: boolean;
+    hasSourCream?: boolean;
+  }
 
-    export default function Taco({ name, hasSalsa, hasSourCream }) {
+  export default function Taco({ name, hasSalsa, hasSourCream }) {
   ```
 
 - Use ternary expressions for conditional rendering as much as possible.
 
-  ```tsx
+  ```typescript tsx
   // Bad
   if (hasTacos) {
     <TacoFeedback feedbackState={feedbackState} />;
@@ -241,7 +241,7 @@
   }
   ```
 
-  ```tsx
+  ```typescript tsx
   // Good
   hasTacos ? (
     <TacoFeedback feedbackState={feedbackState} />
@@ -252,7 +252,7 @@
 
 - Use a `Fragment` instead of a `div` if the attributes of a `div` aren't needed:
 
-  ```tsx
+  ```typescript tsx
   // Bad
   <div>
     <TacoHeader />
@@ -260,7 +260,7 @@
   </div>
   ```
 
-  ```tsx
+  ```typescript tsx
   // Good
   <>
     <TacoHeader />
@@ -268,9 +268,9 @@
   </>
   ```
 
-- Try to avoid IIFE switch statements inside JSX. If you're in a place where you're thinking of one, it probably means another component with a switch statement is a good idea. Or, you could use an object literal instead.
+- Avoid IIFE switch statements inside JSX. If you're in a place where you're thinking of one, it probably means another component with a switch statement is a good idea. Or, you could use an object literal instead.
 
-  ```tsx
+  ```typescript tsx
   // Bad
   export default function TacoDetails({ tacoType }: { tacoType: string }) {
     return (
@@ -291,7 +291,7 @@
   }
   ```
 
-  ```tsx
+  ```typescript tsx
   // Good
   import TacoOptions from './TacoOptions';
 
@@ -317,7 +317,7 @@
   }
   ```
 
-  ```tsx
+  ```typescript tsx
   // Also good
   export default function TacoDetails({ tacoType }: { tacoType: string }) {
     const tacoTypeComponents = {
@@ -434,3 +434,65 @@
   ```
 
 - Use strict equality checks of `===` and `!==` for better type checking, there really shouldn't be a need to use `==` or `!=` in TypeScript.
+
+- If a function needs more than 2-3 arguments, refactor it to take one object as an argument instead. This way, ordering doesn't matter, as the key/value pairs handle this, type checking the argument is easier, and it's overall more readable.
+
+  ```typescript tsx
+  // Bad
+  const setTacoOptions = (
+    salsa: string,
+    guacamole: boolean,
+    tortilla: string,
+    beans: string,
+    protein: string
+  ) => {
+    // Function logic here
+  };
+
+  return (
+    <>
+      <button
+        onClick={() =>
+          setTacoOptions('spicy', true, 'corn', 'pinto', 'chicken')
+        }
+      >
+        Submit
+      </button>
+    </>
+  );
+  ```
+
+  ```typescript tsx
+  // Good
+  // Resource file
+  export interface TacoOptions {
+    salsa: string;
+    guacamole: boolean;
+    tortilla: string;
+    beans: string;
+    protein: string;
+  }
+
+  // Component (TacoOptions is imported)
+  const setTacoOptions = (options: TacoOptions) => {
+    // Function logic here
+  };
+
+  return (
+    <>
+      <button
+        onClick={() =>
+          setTacoOptions({
+            salsa: 'spicy',
+            guacamole: true,
+            tortilla: 'corn',
+            beans: 'pinto',
+            protein: 'chicken',
+          })
+        }
+      >
+        Submit
+      </button>
+    </>
+  );
+  ```
