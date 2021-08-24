@@ -6,7 +6,7 @@
 - Each folder contains an `index.tsx` file with an export function of the same name as the folder, which will be auto imported in other files when pointing to the parent folder.
 
   ```tsx
-  // components/TacoMenu/index.tsx
+  // components/TacoMenuItem/index.tsx
   export default function TacoMenuItem({ menuItem, id }: Props) {
   ```
 
@@ -17,13 +17,13 @@
 
 - If not an `index.tsx` file, files should be named PascalCase.
 - If the file has no JSX element export, the file should be in camelCase and have a `.ts` file type, except...
-- If the file is a Typescript models file, the file should be named in PascalCase with `Resource` in the file name i.e. `TacoMenuResource.ts`
+- If the file is a Typescript models file, the file should be named in PascalCase with `Resource` in the file name. (i.e. `TacoMenuResource.ts`)
 
 ### Component Folder Organization
 
 - **Only one JSX component export per file.**
-- Multiple component files can be stored in the same folder, provided they are only used in the master `index.tsx` file. If used in other components, the file should be moved up the file tree to the base of where they're shared amongst the children components.
-- If a component is getting big and filled with a lot of business logic functions, they should be moved to a `utils` file. Name the file after the parent folder in camelCase, i.e. `tacoMenuItemUtils.ts`
+- Multiple component files can be stored in the same folder, provided they are only used in the master `index.tsx` file. If used in other components, the file should be moved up the file tree to the base of where it's shared amongst the children components.
+- If a component is getting big and filled with a lot of business logic functions, they should be moved to a `utils` file. Name the file after the parent folder in camelCase. (i.e. `tacoMenuItemUtils.ts`)
 
 ### Component File Organization
 
@@ -69,7 +69,7 @@
     }: Props) {
   ```
 
-- If passing a `setState` function as props, simplify the type in the interface:
+- If passing a `setState` function as props, simplify the type in the interface, no need to use `React` types for this:
 
   ```typescript
   interface Props {
@@ -94,7 +94,7 @@
 - As much as possible, organize components in the following manner:
 
   1. Any hook instances (i.e. `const { push } = useHistory();`)
-  1. Any props manipulation variables (object destructuring of props, sorting an array of objects, etc.)
+  1. Any props manipulation variables (i.e. object destructuring of props, sorting an array of objects, etc.)
   1. API call variables (`react-query` hooks)
   1. State variables
   1. `useEffect()` call
@@ -102,8 +102,14 @@
   1. JSX return
 
   ```tsx
-  export default function TacoMenuPage({ menu }: { menu: TacoMenuItem[] }) {
+  interface Props {
+    menu: TacoMenuItem[];
+    store: StoreResource;
+  }
+
+  export default function TacoMenuPage({ menu, store }: Props) {
     const { push } = useHistory();
+    const { locationName, city, state } = store;
     const sortedMenu = menu.sort((a, b) => a.name - b.name);
     const { id: userId } = getCurrentUserId();
     const [order, setOrder] = useState<TacoOrder>(null);
@@ -119,6 +125,9 @@
 
     return (
       <>
+        <p>
+          Delivery from {locationName}, {city}, {state}
+        </p>
         <h1>Taco Menu</h1>
         {sortedMenu.map((menuItem: TacoMenuItem) => (
           <TacoMenuItem key={menuItem.id} id={userId} menuItem={menuItem} />
@@ -131,7 +140,7 @@
 
 ### JSX Code Conventions
 
-- **Prettier will take care of most code formatting for us. Just make sure to run a build of the app before opening a PR.**
+- **Prettier will take care of most code formatting for us. Just make sure to run an** `npm run build` **of the app before opening a PR.**
 - Always use self closing tags in JSX if there are no children inside the element.
 
   ```tsx
@@ -167,6 +176,23 @@
 - If functions get too large and hard to read inside JSX returns (i.e. more than two or three lines), move them into the body of the function and use a callback in the JSX.
 
   ```tsx
+  // Bad
+  return (
+    <div>
+      <input
+        type="text"
+        value={order.name}
+        onChange={(event) => {
+          doSomething();
+          doSomethingElse();
+          doEvenMoreStuff();
+          setOrder({ ...order, name: event.target.value });
+        }}
+      />
+    </div>
+  );
+
+  // Good
   const handleOrderName = (event: ChangeEvent<HTMLInputElement>) => {
     doSomething();
     doSomethingElse();
@@ -184,7 +210,6 @@
 - If the prop being sent to a component is an optional boolean, just write the name of the prop in the component to give it an implicit true.
 
   ```tsx
-  // Parent component
   // Bad
   <Taco name={name} hasSalsa={true} hasSourCream={true} />
   ```
@@ -243,30 +268,41 @@
   </>
   ```
 
-- Try to avoid IIFE switch statements inside JSX. If you're in a place where you're thinking of one, it probably means another component with a switch statement is a good idea. Or, you could use an object literal.
+- Try to avoid IIFE switch statements inside JSX. If you're in a place where you're thinking of one, it probably means another component with a switch statement is a good idea. Or, you could use an object literal instead.
 
   ```tsx
   // Bad
-  (() => {
-    switch (tacoType) {
-      case 'chicken':
-        return <ChickenTaco />;
-      case 'carnitas':
-        return <CarnitasTaco />;
-      case 'blackBean':
-        return <BlackBeanTaco />;
-    }
-  })();
+  export default function TacoDetails({ tacoType }: { tacoType: string }) {
+    return (
+      <>
+        <TacoDetailsHeader />
+        {(() => {
+          switch (tacoType) {
+            case 'chicken':
+              return <ChickenTaco />;
+            case 'carnitas':
+              return <CarnitasTaco />;
+            case 'blackBean':
+              return <BlackBeanTaco />;
+          }
+        })()}
+      </>
+    );
+  }
   ```
 
   ```tsx
   // Good
-  // Parent component
-  return (
-    <>
-      <TacoOptions tacoType={tacoType} />
-    </>
-  );
+  import TacoOptions from './TacoOptions';
+
+  export default function TacoDetails({ tacoType }: { tacoType: string }) {
+    return (
+      <>
+        <TacoDetailsHeader />
+        <TacoOptions tacoType={tacoType} />
+      </>
+    );
+  }
 
   // TacoOptions.tsx
   export default function TacoOptions({ tacoType }: { tacoType: string }) {
@@ -283,23 +319,29 @@
 
   ```tsx
   // Also good
-  const tacoTypeComponents = {
-    chicken: <ChickenTaco />,
-    carnitas: <CarnitasTaco />,
-    blackBean: <BlackBeanTaco />,
-  };
-  const TacoToDisplay = tacoTypeComponents[tacoType];
+  export default function TacoDetails({ tacoType }: { tacoType: string }) {
+    const tacoTypeComponents = {
+      chicken: <ChickenTaco />,
+      carnitas: <CarnitasTaco />,
+      blackBean: <BlackBeanTaco />,
+    };
+    // tacoType needs a type cast here to appease the TypeScript compiler
+    // Other types or interfaces can also be made to avoid this
+    const TacoToDisplay =
+      tacoTypeComponents[tacoType as keyof tacoTypeComponents];
 
-  return (
-    <>
-      <TacoToDisplay />
-    </>
-  );
+    return (
+      <>
+        <TacoDetailsHeader />
+        <TacoToDisplay />
+      </>
+    );
+  }
   ```
 
 ### TypeScript Code Conventions
 
-- Write immutable code as much as possible. Prefer `const` over `let`, and array methods like `.map()`, `.reduce()`, and `.filter()` that return new arrays and leave the original array intact.
+- Write immutable code as much as possible. Prefer `const` over `let`. Instead of `for of` and `for in` loops, use array methods like `.map()`, `.reduce()`, and `.filter()` and object methods like `Object.entries()` and `Object.keys`. These methods return new instances and leave the originals intact.
 
 - Using mutable values is OK within the scope of a function, but only if mutating values within that code block and not affecting variables declared in the body of the functional component.
 
@@ -346,6 +388,15 @@
 - Use object shorthand whenever possible. Put the object shorthand properties at the beginning of the object declaration.
 
   ```typescript
+  // Bad
+  const TacoOrder = {
+    tortilla: 'corn',
+    guacamole: false,
+    protein: protein,
+    salsa: salsa,
+  };
+
+  // Good
   const tacoOrder = {
     protein,
     salsa,
@@ -354,4 +405,32 @@
   };
   ```
 
-- Use strict equality checks of  `===` and `!==` for better type checking, there really shouldn't be a need to use `==` or `!=` in TypeScript.
+- Use rest syntax to get an object minus properties you don't want. (Don't use `delete`.)
+
+  ```typescript
+  const toGoTacoOrder = {
+    hotSauce: true,
+    orderNumber: 1194,
+    itemCount: 7,
+    waitTime: 12,
+    orderName: 'Kevin',
+  };
+
+  // Bad
+  delete toGoTacoOrder.name;
+  completeTacoOrder(toGoTacoOrder);
+
+  // Not ideal
+  completeTacoOrder({
+    hotSauce: toGoTacoOrder.hotSauce,
+    orderNumber: toGoTacoOrder.orderNumber,
+    itemCount: toGoTacoOrder.itemCount,
+    waitTime: toGoTacoOrder.waitTime,
+  });
+
+  // Good
+  const { orderName, ...completeTacoOrderPayload } = toGoTacoOrder;
+  completeTacoOrder(completeTacoOrderPayload);
+  ```
+
+- Use strict equality checks of `===` and `!==` for better type checking, there really shouldn't be a need to use `==` or `!=` in TypeScript.
