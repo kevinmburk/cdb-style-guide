@@ -131,7 +131,7 @@
 
 ### JSX Code Conventions
 
-- Prettier will take care of most code formatting for us. Just make sure to run a build of the app before opening a PR.
+- **Prettier will take care of most code formatting for us. Just make sure to run a build of the app before opening a PR.**
 - Always use self closing tags in JSX if there are no children inside the element.
 
   ```tsx
