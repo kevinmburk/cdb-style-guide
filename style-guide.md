@@ -81,31 +81,19 @@
   ```
 
 - Components should generally be between 100-200 lines of code. If more than 200 lines, the file should likely be split up into smaller components. If less than 100 lines, it may not need its own component, but it makes sense to keep the smaller component if used in multiple places. Again, business logic can be separated out into a `utils` file.
-- The `Props` interface should be the only one stated in the component file. If `useState` variables are using primitives, those can be stated inline in the genetic type argument. Otherwise, types/interfaces should be stored in a resource file in the `models` folder.
+- The `Props` interface should be the only one stated in the component file. If `useState` variables are using primitives or a small type only scoped to that variable, those can be stated inline in the generic type argument. Otherwise, types/interfaces should be stored in a resource file in the `models` folder.
 
   ```typescript
   const [tacoQuantity, setTacoQuantity] = useState<number>(0);
+  // Stating this type inline is fine if this state variable is only in this component
+  const [toppings, setToppings] = useState<'salsa' | 'sourCream'>(null);
   // TacoTypeResource is imported from a separate resource file
   const [tacoType, setTacoType] = useState<TacoTypeResource>(null);
   ```
 
-### Code Conventions
-
-- Prettier will take care of most code formatting for us. Just make sure to run a build of the app before opening a PR.
-- Always use self closing tags in JSX if there are no children inside the element.
-
-  ```tsx
-  // Bad
-  <i className="icon icon-distance"></i>
-  ```
-
-  ```tsx
-  // Good
-  <i className="icon icon-distance" />
-  ```
-
 - As much as possible, organize components in the following manner:
 
+  1. Any hook instances (i.e. `const { push } = useHistory();`)
   1. Any props manipulation variables (object destructuring of props, sorting an array of objects, etc.)
   1. API call variables (`react-query` hooks)
   1. State variables
@@ -115,6 +103,7 @@
 
   ```tsx
   export default function TacoMenuPage({ menu }: { menu: TacoMenuItem[] }) {
+    const { push } = useHistory();
     const sortedMenu = menu.sort((a, b) => a.name - b.name);
     const { id: userId } = getCurrentUserId();
     const [order, setOrder] = useState<TacoOrder>(null);
@@ -125,6 +114,7 @@
 
     const sendOrder = () => {
       postTacoOrder(order);
+      push('/order/confirm');
     };
 
     return (
@@ -139,7 +129,22 @@
   }
   ```
 
-- As much as possible, use a unique data point as a key for mapped JSX elements, instead of `index`, which can be an antipattern.
+### JSX Code Conventions
+
+- Prettier will take care of most code formatting for us. Just make sure to run a build of the app before opening a PR.
+- Always use self closing tags in JSX if there are no children inside the element.
+
+  ```tsx
+  // Bad
+  <i className="icon icon-distance"></i>
+  ```
+
+  ```tsx
+  // Good
+  <i className="icon icon-distance" />
+  ```
+
+- As much as possible, use a unique data point as a key for mapped JSX elements, instead of the `index`, which can be an [antipattern](https://robinpokorny.medium.com/index-as-a-key-is-an-anti-pattern-e0349aece318).
 
   ```tsx
   // Bad
@@ -151,7 +156,7 @@
   ```
 
   ```tsx
-  // Good, if filter.name is unique
+  // Good, if topping.name is unique
   <select>
     {tacoToppings.map((topping) => (
       <option key={topping.name}>{topping.name}</option>
@@ -197,7 +202,7 @@
       hasSourCream?: boolean;
     }
 
-    export default function Taco({name, hasSalsa, hasSourCream}) {
+    export default function Taco({ name, hasSalsa, hasSourCream }) {
   ```
 
 - Use ternary expressions for conditional rendering as much as possible.
@@ -220,7 +225,7 @@
   );
   ```
 
-- Use a `Fragment` instead of a `div` if the html attributes of a `div` aren't needed:
+- Use a `Fragment` instead of a `div` if the attributes of a `div` aren't needed:
 
   ```tsx
   // Bad
@@ -242,7 +247,6 @@
 
   ```tsx
   // Bad
-
   (() => {
     switch (tacoType) {
       case 'chicken':
@@ -292,3 +296,62 @@
     </>
   );
   ```
+
+### TypeScript Code Conventions
+
+- Write immutable code as much as possible. Prefer `const` over `let`, and array methods like `.map()`, `.reduce()`, and `.filter()` that return new arrays and leave the original array intact.
+
+- Using mutable values is OK within the scope of a function, but only if mutating values within that code block and not affecting variables declared in the body of the functional component.
+
+  ```typescript
+  // This is fine
+  const getTacoIngredients = () => {
+    let string = '';
+    for (const ingredient of tacoIngredients) {
+      string += `, ${ingredient}`;
+    }
+
+    return string;
+  };
+  ```
+
+  ```typescript
+  // This is better
+  const getTacoIngredients = () => {
+    return tacoIngredients.reduce((string, ingredient) => {
+      string += `, ${ingredient}`;
+      return string;
+    }, '');
+  };
+  ```
+
+- Use spread syntax to create new objects and arrays.
+
+  ```typescript
+  // Array
+  const ingredients = ['Tortilla', 'Al Pastor', 'Cilantro', 'Cotija'];
+  // Bad
+  const ingredientsCopy = Array.from(ingredients).push('Sour Cream');
+  // Good
+  const spreadIngredientsCopy = [...exampleArray, 'Sour Cream'];
+
+  // Object
+  const tacoOrder = { taco: 'Carnitas', quantity: 3, salsaType: 'spicy' };
+  // Bad
+  const tacoOrderCopy = Object.assign({}, tacoOrder, { guacamole: true });
+  // Good
+  const spreadTacoOrderCopy = { ...tacoOrder, guacamole: true };
+  ```
+
+- Use object shorthand whenever possible. Put the object shorthand properties at the beginning of the object declaration.
+
+  ```typescript
+  const tacoOrder = {
+    protein,
+    salsa,
+    tortilla: 'corn',
+    guacamole: false,
+  };
+  ```
+
+- Use strict equality checks of  `===` and `!==` for better type checking, there really shouldn't be a need to use `==` or `!=` in TypeScript.
