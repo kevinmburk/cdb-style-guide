@@ -21,12 +21,12 @@
 
 ### Component Folder Organization
 
-- **Only one JSX component export per file.**
 - Multiple component files can be stored in the same folder, provided they are only used in the master `index.tsx` file. If used in other components, the file should be moved up the file tree to the base of where it's shared amongst the children components.
 - If a component is getting big and filled with a lot of business logic functions, they should be moved to a `utils` file. Name the file after the parent folder in camelCase. (i.e. `tacoMenuItemUtils.ts`)
 
 ### Component File Organization
 
+- **Only one JSX component export per file.**
 - File imports should be organized at the top of the file in the following order:
   1. Built-in imports, i.e. `React`, `useState`, and `useEffect`.
   1. External imports, like `react-query`, and `moment`.
@@ -101,7 +101,7 @@
   1. Functions used in the component
   1. JSX return
 
-  ```typescript tsx
+  ```tsx
   interface Props {
     menu: TacoMenuItem[];
     store: StoreResource;
@@ -143,19 +143,19 @@
 - **Prettier will take care of most code formatting for us. Just make sure to run an** `npm run build` **of the app before opening a PR.**
 - Always use self closing tags in JSX if there are no children inside the element.
 
-  ```typescript tsx
+  ```tsx
   // Bad
   <i className="icon icon-distance"></i>
   ```
 
-  ```typescript tsx
+  ```tsx
   // Good
   <i className="icon icon-distance" />
   ```
 
 - As much as possible, use a unique data point as a key for mapped JSX elements, instead of the `index`, which can be an [antipattern](https://robinpokorny.medium.com/index-as-a-key-is-an-anti-pattern-e0349aece318).
 
-  ```typescript tsx
+  ```tsx
   // Bad
   <select>
     {tacoToppings.map((topping, i) => (
@@ -164,7 +164,7 @@
   </select>
   ```
 
-  ```typescript tsx
+  ```tsx
   // Good, if topping.name is unique
   <select>
     {tacoToppings.map((topping) => (
@@ -175,7 +175,7 @@
 
 - If functions get too large and hard to read inside JSX returns (i.e. more than two or three lines), move them into the body of the function and use a callback in the JSX.
 
-  ```typescript tsx
+  ```tsx
   // Bad
   return (
     <div>
@@ -209,12 +209,12 @@
 
 - If the prop being sent to a component is an optional boolean, just write the name of the prop in the component to give it an implicit true.
 
-  ```typescript tsx
+  ```tsx
   // Bad
   <Taco name={name} hasSalsa={true} hasSourCream={true} />
   ```
 
-  ```typescript tsx
+  ```tsx
   // Good
   <Taco name={name} hasSalsa hasSourCream />
   ```
@@ -232,7 +232,7 @@
 
 - Use ternary expressions for conditional rendering as much as possible.
 
-  ```typescript tsx
+  ```tsx
   // Bad
   if (hasTacos) {
     <TacoFeedback feedbackState={feedbackState} />;
@@ -241,7 +241,7 @@
   }
   ```
 
-  ```typescript tsx
+  ```tsx
   // Good
   hasTacos ? (
     <TacoFeedback feedbackState={feedbackState} />
@@ -252,7 +252,7 @@
 
 - Use a `Fragment` instead of a `div` if the attributes of a `div` aren't needed:
 
-  ```typescript tsx
+  ```tsx
   // Bad
   <div>
     <TacoHeader />
@@ -260,7 +260,7 @@
   </div>
   ```
 
-  ```typescript tsx
+  ```tsx
   // Good
   <>
     <TacoHeader />
@@ -270,7 +270,7 @@
 
 - Avoid IIFE switch statements inside JSX. If you're in a place where you're thinking of one, it probably means another component with a switch statement is a good idea. Or, you could use an object literal instead.
 
-  ```typescript tsx
+  ```tsx
   // Bad
   export default function TacoDetails({ tacoType }: { tacoType: string }) {
     return (
@@ -291,7 +291,7 @@
   }
   ```
 
-  ```typescript tsx
+  ```tsx
   // Good
   import TacoOptions from './TacoOptions';
 
@@ -317,7 +317,7 @@
   }
   ```
 
-  ```typescript tsx
+  ```tsx
   // Also good
   export default function TacoDetails({ tacoType }: { tacoType: string }) {
     const tacoTypeComponents = {
@@ -326,7 +326,7 @@
       blackBean: <BlackBeanTaco />,
     };
     // tacoType needs a type cast here to appease the TypeScript compiler
-    // Other types or interfaces can also be made to avoid this
+    // Other types or interfaces can be made to avoid this
     const TacoToDisplay =
       tacoTypeComponents[tacoType as keyof tacoTypeComponents];
 
@@ -339,9 +339,52 @@
   }
   ```
 
+### Resource File Code Conventions
+
+- Resource files should not have a default export. Export each model individually to easily tree shake the imports in other files.
+
+```typescript
+// Bad
+export default class TacoMenuItem {
+  id: number;
+  name: string;
+  protein: string;
+  toppings: Toppings;
+}
+
+// Good
+export class TacoMenuItem {
+```
+
+- Export everything, even if just used inside the Resource file at first. Chances are you'll need it somewhere else sometime.
+- All models should be named in PascalCase. Try as much as possible to match the models in CDB backend in naming and properties.
+- Do not use default values for `enums`. Always specify the value. Properties in enums should be in camelCase.
+
+```typescript
+// Bad
+export enum BeanOptions {
+  blackBeans,
+  pintoBeans,
+}
+// Good
+export enum BeanOptions {
+  blackBeans = 'blackBeans',
+  pintoBeans = 'pintoBeans',
+}
+// Good
+export enum Proteins {
+  chicken = 1,
+  barbacoa = 2,
+  carnitas = 3,
+  alPastor = 4,
+}
+```
+
+- Models should be made using `class`. Use `type` for limiting strings or making computed types from other models. Any types that are limiting numbers should be made using `enum`.
+
 ### TypeScript Code Conventions
 
-- Write immutable code as much as possible. Prefer `const` over `let`. Instead of `for of` and `for in` loops, use array methods like `.map()`, `.reduce()`, and `.filter()` and object methods like `Object.entries()` and `Object.keys`. These methods return new instances and leave the originals intact.
+- Write immutable code as much as possible. Prefer `const` over `let`. Instead of `for of` and `for in` loops, use array methods like `.map()`, `.reduce()`, and `.filter()` and object methods like `Object.entries()`. These methods return new instances and leave the originals intact.
 
 - Using mutable values is OK within the scope of a function, but only if mutating values within that code block and not affecting variables declared in the body of the functional component.
 
@@ -370,19 +413,19 @@
 - Use spread syntax to create new objects and arrays.
 
   ```typescript
-  // Array
+  // Array example
   const ingredients = ['Tortilla', 'Al Pastor', 'Cilantro', 'Cotija'];
   // Bad
-  const ingredientsCopy = Array.from(ingredients).push('Sour Cream');
+  const addToIngredients = Array.from(ingredients).push('Sour Cream');
   // Good
-  const spreadIngredientsCopy = [...exampleArray, 'Sour Cream'];
+  const spreadAddToIngredients = [...exampleArray, 'Sour Cream'];
 
-  // Object
+  // Object example
   const tacoOrder = { taco: 'Carnitas', quantity: 3, salsaType: 'spicy' };
   // Bad
-  const tacoOrderCopy = Object.assign({}, tacoOrder, { guacamole: true });
+  const addToTacoOrder = Object.assign({}, tacoOrder, { guacamole: true });
   // Good
-  const spreadTacoOrderCopy = { ...tacoOrder, guacamole: true };
+  const spreadAddToTacoOrder = { ...tacoOrder, guacamole: true };
   ```
 
 - Use object shorthand whenever possible. Put the object shorthand properties at the beginning of the object declaration.
@@ -405,7 +448,7 @@
   };
   ```
 
-- Use rest syntax to get an object minus properties you don't want. (Don't use `delete`.)
+- Use rest syntax to get an object minus properties you don't want. (Don't use `delete`)
 
   ```typescript
   const toGoTacoOrder = {
@@ -417,7 +460,7 @@
   };
 
   // Bad
-  delete toGoTacoOrder.name;
+  delete toGoTacoOrder.orderName;
   completeTacoOrder(toGoTacoOrder);
 
   // Not ideal
@@ -429,15 +472,15 @@
   });
 
   // Good
-  const { orderName, ...completeTacoOrderPayload } = toGoTacoOrder;
-  completeTacoOrder(completeTacoOrderPayload);
+  const { orderName, ...tacoOrderPayload } = toGoTacoOrder;
+  completeTacoOrder(tacoOrderPayload);
   ```
 
 - Use strict equality checks of `===` and `!==` for better type checking, there really shouldn't be a need to use `==` or `!=` in TypeScript.
 
-- If a function needs more than 2-3 arguments, refactor it to take one object as an argument instead. This way, ordering doesn't matter, as the key/value pairs handle this, type checking the argument is easier, and it's overall more readable.
+- If a function needs more than 2-3 arguments, refactor it to take one object as an argument instead. This way, ordering doesn't matter, type checking the argument is easier, and it's overall more readable.
 
-  ```typescript tsx
+  ```tsx
   // Bad
   const setTacoOptions = (
     salsa: string,
@@ -450,19 +493,15 @@
   };
 
   return (
-    <>
-      <button
-        onClick={() =>
-          setTacoOptions('spicy', true, 'corn', 'pinto', 'chicken')
-        }
-      >
-        Submit
-      </button>
-    </>
+    <button
+      onClick={() => setTacoOptions('spicy', true, 'flour', 'pinto', 'chicken')}
+    >
+      Submit
+    </button>
   );
   ```
 
-  ```typescript tsx
+  ```tsx
   // Good
   // Resource file
   export interface TacoOptions {
@@ -479,20 +518,18 @@
   };
 
   return (
-    <>
-      <button
-        onClick={() =>
-          setTacoOptions({
-            salsa: 'spicy',
-            guacamole: true,
-            tortilla: 'corn',
-            beans: 'pinto',
-            protein: 'chicken',
-          })
-        }
-      >
-        Submit
-      </button>
-    </>
+    <button
+      onClick={() =>
+        setTacoOptions({
+          salsa: 'spicy',
+          guacamole: true,
+          tortilla: 'flour',
+          beans: 'pinto',
+          protein: 'chicken',
+        })
+      }
+    >
+      Submit
+    </button>
   );
   ```
