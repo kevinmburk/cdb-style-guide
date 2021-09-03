@@ -27,7 +27,7 @@
 ### Component File Organization
 
 - **Only one JSX component export per file.**
-- File imports should be organized at the top of the file in the following order:
+- File imports should be organized at the top of the file in the following order: (Note: Look into ESLint settings to automatically do this.)
   1. Built-in imports, i.e. `React`, `useState`, and `useEffect`.
   1. External imports, like `react-query`, and `moment`.
   1. Internal custom hooks, utils files, and `.css` files.
@@ -321,9 +321,9 @@
   // Also good
   export default function TacoDetails({ tacoType }: { tacoType: string }) {
     const tacoTypeComponents = {
-      chicken: <ChickenTaco />,
-      carnitas: <CarnitasTaco />,
-      blackBean: <BlackBeanTaco />,
+      chicken: ChickenTaco,
+      carnitas: CarnitasTaco,
+      blackBean: BlackBeanTaco,
     };
     // tacoType needs a type cast here to appease the TypeScript compiler
     // Other types or interfaces can be made to avoid this
