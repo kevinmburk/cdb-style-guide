@@ -32,7 +32,7 @@
   1. External imports, like `react-query`, and `moment`.
   1. Internal custom hooks, utils files, and `.css` files.
   1. Internal Typescript models files.
-  1. Internal component files.
+  1. Internal JSX component files.
 - Don't include file types in file imports, except for `.css` files.
 
   ```typescript
@@ -207,7 +207,7 @@
   );
   ```
 
-- If the prop being sent to a component is an optional boolean, just write the name of the prop in the component to give it an implicit true.
+- If the prop being sent to a component is an optional boolean, just write the name of the prop in the component to give it an implicit true. Prefer optional booleans over passing `false` to a component as a prop.
 
   ```tsx
   // Bad
@@ -341,7 +341,7 @@
 
 ### Resource File Code Conventions
 
-- Resource files should not have a default export. Export each model individually to easily tree shake the imports in other files.
+- Resource files should **not** have a default export. Export each model individually to easily tree shake the imports in other files.
 
 ```typescript
 // Bad
@@ -358,29 +358,29 @@ export class TacoMenuItem {
 
 - Export everything, even if just used inside the Resource file at first. Chances are you'll need it somewhere else sometime.
 - All models should be named in PascalCase. Try as much as possible to match the models in CDB backend in naming and properties.
-- Do not use default values for `enums`. Always specify the value. Properties in enums should be in camelCase.
+- Do not use default values for `enums`. Always specify the value. Properties in enums should be in PascalCase.
 
 ```typescript
 // Bad
 export enum BeanOptions {
-  blackBeans,
-  pintoBeans,
+  BlackBeans,
+  PintoBeans,
 }
 // Good
 export enum BeanOptions {
-  blackBeans = 'blackBeans',
-  pintoBeans = 'pintoBeans',
+  BlackBeans = 'blackBeans',
+  PintoBeans = 'pintoBeans',
 }
 // Good
 export enum Proteins {
-  chicken = 1,
-  barbacoa = 2,
-  carnitas = 3,
-  alPastor = 4,
+  Chicken = 1,
+  Barbacoa = 2,
+  Carnitas = 3,
+  AlPastor = 4,
 }
 ```
 
-- Models should be made using `class`. Use `type` for limiting strings or making computed types from other models. Any types that are limiting numbers should be made using `enum`.
+- Models should be made using `class`. Use `type` for typing strings or making computed types from other models. Any types that are typing numbers should be made using `enum`.
 
 ### TypeScript Code Conventions
 
@@ -448,9 +448,10 @@ export enum Proteins {
   };
   ```
 
-- Use rest syntax to get an object minus properties you don't want. (Don't use `delete`)
+- Use rest syntax to get an object minus properties you don't want.
 
   ```typescript
+  // Need to send this taco order minus the orderName
   const toGoTacoOrder = {
     hotSauce: true,
     orderNumber: 1194,
