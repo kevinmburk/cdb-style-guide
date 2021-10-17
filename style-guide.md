@@ -358,7 +358,7 @@ export class TacoMenuItem {
 
 - Export everything, even if just used inside the Resource file at first. Chances are you'll need it somewhere else sometime.
 - All models should be named in PascalCase. Try as much as possible to match the models in CDB backend in naming and properties.
-- Do not use default values for `enums`. Always specify the value. Properties in enums should be in PascalCase.
+- Do not use default values for `enums`. Always specify the value. Properties in enums should be in PascalCase. `enums` should also always include 'Enum' in it's name.
 
 ```typescript
 // Bad
@@ -367,12 +367,12 @@ export enum BeanOptions {
   PintoBeans,
 }
 // Good
-export enum BeanOptions {
+export enum BeanOptionsEnum {
   BlackBeans = 'blackBeans',
   PintoBeans = 'pintoBeans',
 }
 // Good
-export enum Proteins {
+export enum ProteinsEnum {
   Chicken = 1,
   Barbacoa = 2,
   Carnitas = 3,
@@ -380,7 +380,7 @@ export enum Proteins {
 }
 ```
 
-- Models should be made using `class`. Use `type` for typing strings or making computed types from other models. Any types that are typing numbers should be made using `enum`.
+- Models should be made using `class`. Use `interface` for internal frontend, non-DTO models, like state variables and function arguments/returns. Use `type` for typing strings or making computed types from other models. Any types that are typing numbers should be made using `enum`.
 
 ### TypeScript Code Conventions
 
@@ -426,6 +426,34 @@ export enum Proteins {
   const addToTacoOrder = Object.assign({}, tacoOrder, { guacamole: true });
   // Good
   const spreadAddToTacoOrder = { ...tacoOrder, guacamole: true };
+  ```
+
+- Use object destructuring whenever possible, it makes code much more readable. Reassign to move specific variable names when beneficial.
+
+  ```typescript
+  // Bad
+  export default function OrderConfirmation({ tacoOrder, user }: Props) {
+    const sendOrder = () => {
+      postTacoOrder({
+        userId: user.id,
+        tacoOrderId: tacoOrder.id,
+        address: tacoOrder.address,
+        deliveryInstructions: tacoOrder.deliveryInstructions,
+      });
+    };
+  }
+  ```
+
+  ```typescript
+  // Good
+  export default function OrderConfirmation({ tacoOrder, user }: Props) {
+    const { id: tacoOrderId, address, deliveryInstructions } = tacoOrder;
+    const { id: userId } = user;
+
+    const sendOrder = () => {
+      postTacoOrder({ userId, tacoOrderId, address, deliveryInstructions });
+    };
+  }
   ```
 
 - Use object shorthand whenever possible. Put the object shorthand properties at the beginning of the object declaration.
